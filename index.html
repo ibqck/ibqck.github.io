@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hybrid WebView Framework · 표인범 iOS 포트폴리오</title>
+<meta name="description" content="표인범 iOS 포트폴리오 — 그룹사 연동 Hybrid WebView 프레임워크 (iOS AA · PL)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+img{max-width:100%}
+[hidden]:not([hidden=until-found i]){display:none!important}
+/* 레이아웃: 한 줄 기둥(본문 68ch) 안에 넓은 도면 두 장 — 도면은 기둥보다 넓게 나가고 좁은 화면에서는 가로로 스크롤 */
+:root {
+  --bg: #F5F6FA;
+  --surface: #FFFFFF;
+  --fg: #1C1E2B;
+  --muted: #5A5F74;
+  --line: #C8CCDA;
+  --fw: #534AB7;
+  --fw-fill: #ECEAFB;
+  --fw-zone: #F3F2FC;
+  --smp: #3B6D11;
+  --smp-fill: #E6F1D9;
+  --smp-zone: #F1F7EA;
+  --web: #9A5A0A;
+  --web-fill: #FBEEDB;
+  --web-zone: #FDF6EC;
+  --app-fill: #E9E8E2;
+  --key: #C2410C;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11131B; --surface: #181B26; --fg: #E5E7F0; --muted: #9CA1B7; --line: #353A4D;
+    --fw: #A79EFF; --fw-fill: #262447; --fw-zone: #1A1A2E;
+    --smp: #9BD06A; --smp-fill: #1F2E16; --smp-zone: #161F13;
+    --web: #F0AE58; --web-fill: #3A2A14; --web-zone: #221B12;
+    --app-fill: #2A2B30; --key: #FF8A4C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11131B; --surface: #181B26; --fg: #E5E7F0; --muted: #9CA1B7; --line: #353A4D;
+  --fw: #A79EFF; --fw-fill: #262447; --fw-zone: #1A1A2E;
+  --smp: #9BD06A; --smp-fill: #1F2E16; --smp-zone: #161F13;
+  --web: #F0AE58; --web-fill: #3A2A14; --web-zone: #221B12;
+  --app-fill: #2A2B30; --key: #FF8A4C;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-font-smoothing: antialiased;
+}
+.page { max-width: 1040px; margin: 0 auto; padding-block: 56px 72px; display: grid; gap: 64px; }
+.col { max-width: 68ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.92em; }
+
+header { display: grid; gap: 16px; }
+.eyebrow { font-size: 13px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.2; margin: 0; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { font-size: 18px; color: var(--fg); margin: 0; }
+.stack { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
+.stack li { font-family: var(--font-mono); font-size: 12.5px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--surface); }
+
+section { display: grid; gap: 20px; }
+h2 { font-size: 24px; line-height: 1.35; margin: 0; font-weight: 700; text-wrap: balance; }
+.sec-no { font-family: var(--font-mono); font-size: 13px; color: var(--muted); display: block; margin-bottom: 2px; font-weight: 400; }
+p { margin: 0; }
+
+figure { margin: 0; display: grid; gap: 12px; }
+.frame { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; overflow-x: auto; }
+.diagram { display: block; width: 100%; min-width: 760px; height: auto; }
+figcaption { font-size: 14px; color: var(--muted); max-width: 80ch; }
+
+.rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.rules li { display: grid; gap: 6px; align-content: start; padding-top: 12px; border-top: 2px solid var(--line); min-width: 0; }
+.rules b { font-size: 15px; }
+.rules span { font-size: 14.5px; color: var(--muted); }
+.rules li.k { border-top-color: var(--key); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); margin: 0; padding: 0; list-style: none; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1.5px solid; }
+.lg-web { background: var(--web-fill); border-color: var(--web) !important; }
+.lg-fw { background: var(--fw-fill); border-color: var(--fw) !important; }
+.lg-smp { background: var(--smp-fill); border-color: var(--smp) !important; }
+.lg-key { background: transparent; border-color: var(--key) !important; }
+
+ol.trip { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 0; }
+ol.trip li { counter-increment: s; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 11px 0; border-bottom: 1px solid var(--line); }
+ol.trip li::before { content: counter(s, decimal-leading-zero); font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+ol.trip .who { font-family: var(--font-mono); font-size: 12px; padding: 1px 8px; border-radius: 4px; white-space: nowrap; }
+.who.w { color: var(--web); background: var(--web-fill); }
+.who.d { color: var(--fw); background: var(--fw-fill); }
+.who.s { color: var(--smp); background: var(--smp-fill); }
+
+.decisions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
+.decisions article { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.decisions h3 { font-size: 17px; margin: 0; line-height: 1.4; }
+.decisions p { font-size: 15px; color: var(--muted); }
+.decisions .how { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg); }
+
+.resume { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 8px 24px; }
+.resume > dl { margin: 0; display: grid; }
+.resume .row { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 20px; padding-block: 16px; border-top: 1px solid var(--line); }
+.resume .row:first-child { border-top: 0; }
+.resume dt { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; padding-top: 2px; }
+.resume dd { margin: 0; min-width: 0; font-size: 15.5px; }
+.resume .lead dd { font-size: 20px; font-weight: 600; line-height: 1.45; }
+.resume .lead dd strong { color: var(--fw); font-weight: 700; }
+.work { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.work li { padding-left: 2px; }
+.tech { margin: 0; display: grid; gap: 10px; }
+.tech > div { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.tech dt { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--muted); padding-top: 0; }
+.tech .stack { margin: 0; }
+.tech .stack li { color: var(--fg); }
+.wins { margin: 0; padding: 0; list-style: none; counter-reset: w; display: grid; gap: 10px; }
+.wins li { counter-increment: w; display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 8px; }
+.wins li::before { content: counter(w); grid-row: span 2; font-family: var(--font-mono); font-size: 13px; color: var(--fw); padding-top: 2px; }
+.wins b { font-size: 15.5px; }
+.wins span { font-size: 14.5px; color: var(--muted); }
+.resume .num { font-variant-numeric: tabular-nums; font-weight: 500; }
+.roles { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.roles li { font-weight: 600; }
+.roles li + li::before { content: "·"; margin-right: 10px; color: var(--muted); font-weight: 400; }
+.resume .phase { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--muted); }
+.resume .phases { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 4px; font-size: 13.5px; font-weight: 400; color: var(--muted); }
+.resume .phases em { font-style: normal; font-weight: 600; margin-right: 6px; color: var(--fg); }
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+
+/* SVG — 색은 모두 토큰에서 */
+.diagram text { font-family: var(--font-body); fill: var(--fg); }
+.diagram .mono { font-family: var(--font-mono); }
+.t-title { font-size: 13px; font-weight: 600; }
+.t-sub { font-size: 11px; fill: var(--muted) !important; }
+.t-edge { font-size: 11px; fill: var(--muted) !important; }
+.t-edge-key { font-size: 11.5px; font-weight: 600; fill: var(--key) !important; }
+.t-note { font-size: 11px; fill: var(--muted) !important; }
+.t-group { font-size: 14px; font-weight: 700; }
+.t-group-sm { font-size: 12px; font-weight: 600; fill: var(--muted) !important; }
+.t-zone { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; fill: var(--muted) !important; }
+.t-zone-sm { font-size: 11px; fill: var(--muted) !important; }
+.b-fw, .b-pub { fill: var(--fw-fill); stroke: var(--fw); stroke-width: 1.5; }
+.b-hid { fill: var(--surface); stroke: var(--fw); stroke-width: 1.2; }
+.b-hid-soft { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.b-key { fill: var(--fw-fill); stroke: var(--key); stroke-width: 2.2; }
+.b-smp { fill: var(--smp-fill); stroke: var(--smp); stroke-width: 1.4; }
+.b-web { fill: var(--web-fill); stroke: var(--web); stroke-width: 1.4; }
+.b-app { fill: var(--app-fill); stroke: var(--muted); stroke-width: 1.4; }
+.g-fw { fill: var(--fw-zone); stroke: var(--fw); stroke-width: 1; stroke-opacity: 0.45; }
+.g-hid { fill: none; stroke: var(--fw); stroke-width: 1.2; stroke-opacity: 0.7; }
+.g-smp { fill: var(--smp-zone); stroke: var(--smp); stroke-width: 1; stroke-opacity: 0.45; }
+.g-web { fill: var(--web-zone); stroke: var(--web); stroke-width: 1; stroke-opacity: 0.45; }
+.g-loop { fill: none; stroke: var(--smp); stroke-width: 1.2; stroke-opacity: 0.8; }
+.l-fg { stroke: var(--muted); stroke-width: 1.4; }
+.l-fw { stroke: var(--fw); stroke-width: 1.4; }
+.l-smp { stroke: var(--smp); stroke-width: 1.4; }
+.l-web { stroke: var(--web); stroke-width: 1.4; }
+.l-key { stroke: var(--key); stroke-width: 2.2; }
+.m-fg { fill: var(--muted); } .m-fw { fill: var(--fw); } .m-smp { fill: var(--smp); } .m-web { fill: var(--web); } .m-key { fill: var(--key); }
+
+@media (max-width: 760px) {
+  .resume { padding: 4px 16px; }
+  .resume .row, .tech > div { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .page { padding-block: 32px 48px; gap: 48px; }
+  .rules, .decisions { grid-template-columns: minmax(0, 1fr); }
+  .frame { padding: 12px; }
+  ol.trip li { grid-template-columns: 32px minmax(0, 1fr); }
+  ol.trip .who { grid-column: 2; justify-self: start; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="col">
+    <p class="eyebrow">Portfolio · iOS</p>
+    <h1>Hybrid WebView Framework</h1>
+  </header>
+
+  <section class="resume" aria-label="프로젝트 요약">
+    <dl>
+      <div class="row lead">
+        <dt>적용 서비스</dt>
+        <dd><strong>NewSuperSOL</strong> — 그룹사 연동 웹뷰</dd>
+      </div>
+      <div class="row">
+        <dt>기간</dt>
+        <dd class="num">2024.07 ~ 2026.07
+          <span class="phases"><span><em>PoC</em>2024.07 ~ 2024.12</span><span><em>본 개발</em>2025.01 ~ 2026.07</span></span>
+        </dd>
+      </div>
+      <div class="row">
+        <dt>역할</dt>
+        <dd><ul class="roles"><li>iOS AA</li><li>앱 연동 프로세스 설계</li><li>PL</li></ul></dd>
+      </div>
+      <div class="row">
+        <dt>프로젝트</dt>
+        <dd>그룹사 웹 서비스를 앱에 연동하는 범용 Hybrid WebView 프레임워크 (iOS)</dd>
+      </div>
+      <div class="row">
+        <dt>개요</dt>
+        <dd>어떤 앱에도 진입점 하나로 붙는 하이브리드 WebView 프레임워크. WebView · JS 브릿지 라우팅 · 화면 이동 · MVI 화면 · 기본 브릿지를 프레임워크에 담고, 앱 고유 기능은 같은 계약으로 등록해 확장한다.</dd>
+      </div>
+      <div class="row">
+        <dt>주요 성과</dt>
+        <dd>
+          <ol class="wins">
+            <li><b>WebView 메모리 사용량 약 70% 감소</b><span>싱글톤 · 순환참조로 얽힌 Bridge 를 Navigator / API Bridge / SSO 세션 모듈로 분리해 순환참조와 Bridge Event 중첩 해소</span></li>
+            <li><b>Bridge 인터페이스 통합 · 규격 문서화</b><span>Bridge 마다 따로 있던 I/F 를 단일 I/F 와 규격 문서로 통합, WKScriptMessage → UseCase 단방향 흐름으로 확장 기준 정립</span></li>
+            <li><b>그룹사 공통 SDK 플랫폼화</b><span>RootView 진입점 하나와 계약 등록만으로 연동되게 설계, 그룹사마다 달랐던 WebView 구조를 공통 SDK 로 일원화</span></li>
+            <li><b>Tuist 모듈화로 빌드 효율 개선</b><span>Domain / Data / Presentation 분리와 내부 · 외부 의존성 정리로 증분 빌드 적용, 필요한 모듈만 로드</span></li>
+            <li><b>SwiftUI + MVI 로 금융 비즈니스 로직 분리</b><span>단방향 데이터 흐름으로 화면 상태와 금융 로직 분리, Coordinator · DI(Swinject)로 Flow 단위를 나눠 연동 앱과의 결합도 최소화</span></li>
+            <li><b>Swift Concurrency 기반 BridgeManager</b><span>Bridge Event 를 UseCase 단위로 처리하고 반복되던 Boilerplate 를 공통 모듈로 정리</span></li>
+            <li><b>인증 흐름 안정화</b><span>OpenAPI · OAuth 인증 단계를 서비스별로 분리하고 ErrorCase 명세화, 세션 만료 시 화면 전환 오류 제거</span></li>
+            <li><b>테스트 가능한 구조 · 개발 가이드</b><span>기능 · 서비스 단위 독립 테스트 구조 구축, Swift Testing 으로 브릿지 규격 적합성 테스트 351개 케이스 자동화, 개발 가이드 문서화</span></li>
+          </ol>
+        </dd>
+      </div>
+      <div class="row">
+        <dt>기술 스택</dt>
+        <dd>
+          <dl class="tech">
+            <div><dt>Language</dt><dd><ul class="stack"><li>Swift</li><li>JavaScript (브릿지 SDK 연동)</li></ul></dd></div>
+            <div><dt>UI</dt><dd><ul class="stack"><li>SwiftUI</li><li>UIKit (UINavigationController 연동)</li><li>WKWebView</li></ul></dd></div>
+            <div><dt>Architecture</dt><dd><ul class="stack"><li>MVI</li><li>Coordinator</li><li>Clean Architecture</li><li>Modular Architecture</li><li>DI (Swinject)</li></ul></dd></div>
+            <div><dt>Concurrency</dt><dd><ul class="stack"><li>Swift Concurrency</li><li>async/await</li><li>@MainActor</li><li>CheckedContinuation</li><li>Task Cancellation</li></ul></dd></div>
+            <div><dt>Auth</dt><dd><ul class="stack"><li>OAuth</li><li>OpenAPI 연동</li><li>SSO 세션</li></ul></dd></div>
+            <div><dt>Bridge</dt><dd><ul class="stack"><li>WKScriptMessageHandler</li><li>WKUIDelegate (prompt)</li><li>evaluateJavaScript</li><li>Codable</li></ul></dd></div>
+            <div><dt>Build · Tooling</dt><dd><ul class="stack"><li>Tuist (모듈화 · 증분 빌드 · scaffold)</li><li>Swift Package Manager</li><li>Git Submodule</li><li>Shell Script</li></ul></dd></div>
+            <div><dt>Test · Quality</dt><dd><ul class="stack"><li>Swift Testing</li><li>Contract Conformance Test</li><li>Test Double (Mock · Stub · Spy)</li><li>os.Logger (privacy)</li></ul></dd></div>
+            <div><dt>Collaboration</dt><dd><ul class="stack"><li>PR 기반 코드 리뷰</li><li>3-플랫폼 공유 규격</li></ul></dd></div>
+          </dl>
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section>
+    <div class="col">
+      <h2><span class="sec-no">01</span>모듈러 아키텍처</h2>
+    </div>
+    <ul class="legend" aria-label="범례">
+      <li><i class="lg-fw"></i>프레임워크 모듈</li>
+      <li><i class="lg-smp"></i>브릿지</li>
+      <li><i class="lg-key"></i>브릿지가 꽂히는 지점</li>
+    </ul>
+    <figure>
+      <div class="frame"><svg class="diagram" viewBox="0 0 1000 600" role="img" aria-label="일반 앱은 진입점 하나로 HybridFramework 를 붙인다. 프레임워크 안에 WebView, 라우터, MVI 화면, 기본 브릿지가 모두 있고, 앱 고유 브릿지가 필요하면 Common 계약으로 등록한다."><defs><marker id="a-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fg" d="M0,0 L10,5 L0,10 z"/></marker><marker id="a-fw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fw" d="M0,0 L10,5 L0,10 z"/></marker><marker id="a-smp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-smp" d="M0,0 L10,5 L0,10 z"/></marker><marker id="a-web" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-web" d="M0,0 L10,5 L0,10 z"/></marker><marker id="a-key" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-key" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="b-app" x="16" y="16" width="968" height="72" rx="6"/><text class="t-title" x="500.0" y="49.0" text-anchor="middle">일반 앱 · 어떤 앱이든</text><text class="t-sub" x="500.0" y="65.0" text-anchor="middle">기존 화면 · 구조는 그대로 두고 진입점 하나로 웹 영역을 띄운다</text><rect class="g-fw" x="16" y="130" width="680" height="456" rx="10"/><text class="t-group" x="36" y="156" text-anchor="start">HybridFramework</text><text class="t-note" x="36" y="174" text-anchor="start">앱 어디에 붙여도 혼자 동작하는 범용 묶음</text><rect class="b-hid" x="40" y="190" width="300" height="56" rx="6"/><text class="t-title mono" x="190.0" y="215.0" text-anchor="middle">Navigator</text><text class="t-sub" x="190.0" y="231.0" text-anchor="middle">진입점 · Coordinator · 화면 스택</text><rect class="b-key" x="372" y="190" width="300" height="56" rx="6"/><text class="t-title mono" x="522.0" y="215.0" text-anchor="middle">Common</text><text class="t-sub" x="522.0" y="231.0" text-anchor="middle">계약 · 모든 모듈이 import</text><rect class="b-hid" x="40" y="286" width="300" height="56" rx="6"/><text class="t-title mono" x="190.0" y="311.0" text-anchor="middle">Presentation</text><text class="t-sub" x="190.0" y="327.0" text-anchor="middle">WKWebView · MVI Store · SwiftUI</text><rect class="b-hid" x="372" y="286" width="300" height="56" rx="6"/><text class="t-title mono" x="522.0" y="311.0" text-anchor="middle">PresentationMapper</text><text class="t-sub" x="522.0" y="327.0" text-anchor="middle">WKScriptMessage → 봉투</text><rect class="b-hid" x="40" y="382" width="300" height="56" rx="6"/><text class="t-title mono" x="190.0" y="407.0" text-anchor="middle">BridgeManager</text><text class="t-sub" x="190.0" y="423.0" text-anchor="middle">라우터 · 응답 봉투</text><rect class="b-smp" x="372" y="382" width="300" height="56" rx="6"/><text class="t-title" x="522.0" y="407.0" text-anchor="middle">기본 브릿지</text><text class="t-sub" x="522.0" y="423.0" text-anchor="middle">UI · Device · Storage → Intent</text><rect class="b-hid" x="40" y="478" width="632" height="48" rx="6"/><text class="t-title mono" x="356.0" y="499.0" text-anchor="middle">PresentationModel</text><text class="t-sub" x="356.0" y="515.0" text-anchor="middle">봉투 · 화면 이동 타입</text><rect class="b-hid-soft" x="40" y="538" width="632" height="36" rx="6"/><text class="t-title" x="356.0" y="560.0" text-anchor="middle">Logger · Concurrency — 공용 유틸</text><polyline class="l-fw" points="190,246 190,284" fill="none" marker-end="url(#a-fw)"/><polyline class="l-fw" points="190,342 190,380" fill="none" marker-end="url(#a-fw)"/><polyline class="l-fw" points="340,314 370,314" fill="none" marker-end="url(#a-fw)"/><polyline class="l-key" points="340,410 370,410" fill="none" marker-end="url(#a-key)"/><text class="t-edge-key" x="356" y="400" text-anchor="middle">등록</text><polyline class="l-fw" points="190,438 190,476" fill="none" marker-end="url(#a-fw)"/><polyline class="l-fw" points="672,314 684,314 684,502 674,502" fill="none" marker-end="url(#a-fw)"/><rect class="g-smp" x="736" y="330" width="248" height="120" rx="10" stroke-dasharray="6 5"/><text class="t-group-sm" x="756" y="356" text-anchor="start">앱 고유 브릿지 · 선택</text><rect class="b-smp" x="756" y="370" width="208" height="60" rx="6"/><text class="t-title" x="860.0" y="397.0" text-anchor="middle">로그인 · 결제 …</text><text class="t-sub" x="860.0" y="413.0" text-anchor="middle">그 앱에만 있는 업무</text><polyline class="l-key" points="736,390 716,390 716,218 674,218" fill="none" marker-end="url(#a-key)"/><text class="t-edge-key" x="722" y="300" text-anchor="start">같은 계약으로 등록</text><polyline class="l-fg" points="190,88 190,188" fill="none" marker-end="url(#a-fg)"/><text class="t-edge" x="198" y="112" text-anchor="start">RootView 하나</text><polyline class="l-fg" points="860,88 860,328" fill="none" marker-end="url(#a-fg)"/><text class="t-edge" x="868" y="112" text-anchor="start">필요할 때만 만든다</text></svg></div>
+      <figcaption>프레임워크는 WebView 부터 MVI 화면, 기본 브릿지까지 앱 없이도 동작합니다. 앱이 하는 일은 둘입니다. 진입점(RootView)을 띄우는 것, 그리고 필요하면 자기 업무 브릿지를 기본 브릿지와 같은 계약으로 등록하는 것입니다. 프레임워크 안은 Tuist 모듈로 나눠 의존 방향을 지키고, 화면 단위로 SwiftUI Preview 를 돌립니다.</figcaption>
+    </figure>
+    <ul class="rules">
+      <li><b>붙이는 지점은 하나</b><span>앱은 RootView 하나로 웹 영역을 띄웁니다. 기존 화면 구조나 내비게이션을 바꿀 필요가 없습니다.</span></li>
+      <li class="k"><b>확장은 계약으로</b><span>기본 브릿지와 앱 고유 브릿지는 같은 프로토콜로 등록됩니다. 프레임워크는 앱의 업무 타입을 모릅니다.</span></li>
+      <li><b>의존은 한 방향</b><span>Navigator → Presentation → BridgeManager → Model 순서로만 의존합니다. 거꾸로 가는 import 는 없습니다.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="col">
+      <h2><span class="sec-no">02</span>단방향 WebView Bridge + MVI + SwiftUI</h2>
+    </div>
+    <ul class="legend" aria-label="범례">
+      <li><i class="lg-web"></i>웹</li>
+      <li><i class="lg-fw"></i>통로(WebView · 라우터)</li>
+      <li><i class="lg-smp"></i>브릿지 + MVI 화면</li>
+      <li><i class="lg-key"></i>등록된 브릿지로 넘어가는 지점</li>
+    </ul>
+    <figure>
+      <div class="frame"><svg class="diagram" viewBox="0 0 1000 540" role="img" aria-label="웹의 호출은 프레임워크의 컨트롤러와 라우터를 거쳐 브릿지에서 디코딩되고 Intent 로 간다. Intent 는 Action 을 보내고 순수 Reducer 가 State 를 바꾸며 SwiftUI View 가 다시 그린다. 결과는 같은 callbackID 로 웹에 돌아간다."><defs><marker id="b-fg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fg" d="M0,0 L10,5 L0,10 z"/></marker><marker id="b-fw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-fw" d="M0,0 L10,5 L0,10 z"/></marker><marker id="b-smp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-smp" d="M0,0 L10,5 L0,10 z"/></marker><marker id="b-web" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-web" d="M0,0 L10,5 L0,10 z"/></marker><marker id="b-key" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-key" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="g-web" x="6" y="6" width="170" height="526" rx="10"/><rect class="g-fw" x="196" y="6" width="438" height="526" rx="10"/><rect class="g-smp" x="652" y="6" width="342" height="526" rx="10"/><text class="t-zone" x="91" y="28" text-anchor="middle">웹</text><text class="t-zone" x="415" y="28" text-anchor="middle">통로 · WebView · 라우터</text><text class="t-zone" x="823" y="28" text-anchor="middle">브릿지 + MVI 화면</text><rect class="b-web" x="16" y="44" width="150" height="56" rx="6"/><text class="t-title mono" x="91.0" y="69.0" text-anchor="middle">bridge.call</text><text class="t-sub" x="91.0" y="85.0" text-anchor="middle">bridge, command, params</text><rect class="b-hid" x="214" y="44" width="180" height="56" rx="6"/><text class="t-title" x="304.0" y="69.0" text-anchor="middle">WebView 컨트롤러</text><text class="t-sub" x="304.0" y="85.0" text-anchor="middle">inFlightTasks 에 등록</text><rect class="b-hid" x="440" y="44" width="180" height="56" rx="6"/><text class="t-title" x="530.0" y="69.0" text-anchor="middle">브릿지 라우터</text><text class="t-sub" x="530.0" y="85.0" text-anchor="middle">(브릿지, 커맨드)로 판정</text><rect class="b-smp" x="668" y="44" width="150" height="56" rx="6"/><text class="t-title" x="743.0" y="69.0" text-anchor="middle">브릿지</text><text class="t-sub" x="743.0" y="85.0" text-anchor="middle">decode = 검증</text><rect class="b-smp" x="846" y="44" width="138" height="56" rx="6"/><text class="t-title mono" x="915.0" y="69.0" text-anchor="middle">Intent</text><text class="t-sub" x="915.0" y="85.0" text-anchor="middle">UseCase · send · ask</text><polyline class="l-web" points="166,72.0 212,72.0" fill="none" marker-end="url(#b-web)"/><text class="t-edge mono" x="189" y="26" text-anchor="middle">postMessage</text><text class="t-edge mono" x="189" y="38" text-anchor="middle">· prompt</text><polyline class="l-fw" points="394,72.0 438,72.0" fill="none" marker-end="url(#b-fw)"/><text class="t-edge" x="416" y="38" text-anchor="middle">봉투</text><polyline class="l-key" points="620,72.0 666,72.0" fill="none" marker-end="url(#b-key)"/><text class="t-edge-key" x="643" y="38" text-anchor="middle">등록된 커맨드</text><polyline class="l-smp" points="818,72.0 844,72.0" fill="none" marker-end="url(#b-smp)"/><polyline class="l-fw" points="530,100 530,150" fill="none" marker-end="url(#b-fw)"/><text class="t-edge" x="538" y="130" text-anchor="start">기본 브릿지</text><rect class="b-hid" x="440" y="152" width="180" height="50" rx="6"/><text class="t-title" x="530.0" y="174.0" text-anchor="middle">Navigator 실행부</text><text class="t-sub" x="530.0" y="190.0" text-anchor="middle">open · close · root 등 7개</text><text class="t-note" x="530" y="228" text-anchor="middle">어디에도 없으면 같은 callbackID 로</text><text class="t-note" x="530" y="244" text-anchor="middle">&#x27;구현되지 않은 브릿지&#x27; 실패 응답</text><rect class="b-hid-soft" x="214" y="152" width="180" height="50" rx="6"/><text class="t-title" x="304.0" y="174.0" text-anchor="middle">수명으로 끝냄</text><text class="t-sub" x="304.0" y="190.0" text-anchor="middle">웹뷰가 사라지면 취소</text><text class="t-note" x="304" y="228" text-anchor="middle">브릿지 대기에 타임아웃이 없다</text><rect class="g-loop" x="660" y="126" width="326" height="268" rx="10" stroke-dasharray="4 4"/><text class="t-group-sm" x="674" y="146" text-anchor="start">MVI · 화면 하나의 단방향 순환</text><rect class="b-smp" x="846" y="166" width="138" height="50" rx="6"/><text class="t-title mono" x="915.0" y="188.0" text-anchor="middle">Action</text><text class="t-sub" x="915.0" y="204.0" text-anchor="middle">send · ask</text><rect class="b-smp" x="846" y="316" width="138" height="50" rx="6"/><text class="t-title mono" x="915.0" y="338.0" text-anchor="middle">Reducer</text><text class="t-sub" x="915.0" y="354.0" text-anchor="middle">순수 함수</text><rect class="b-smp" x="668" y="316" width="150" height="50" rx="6"/><text class="t-title mono" x="743.0" y="338.0" text-anchor="middle">State</text><text class="t-sub" x="743.0" y="354.0" text-anchor="middle">Store 의 feature 칸</text><rect class="b-smp" x="668" y="166" width="150" height="50" rx="6"/><text class="t-title mono" x="743.0" y="188.0" text-anchor="middle">SwiftUI View</text><text class="t-sub" x="743.0" y="204.0" text-anchor="middle">feature.layout</text><polyline class="l-smp" points="915,100 915,164" fill="none" marker-end="url(#b-smp)"/><polyline class="l-smp" points="915,216 915,314" fill="none" marker-end="url(#b-smp)"/><text class="t-edge mono" x="922" y="270" text-anchor="start">Action</text><polyline class="l-smp" points="846,341 820,341" fill="none" marker-end="url(#b-smp)"/><polyline class="l-smp" points="743,316 743,218" fill="none" marker-end="url(#b-smp)"/><text class="t-edge" x="750" y="270" text-anchor="start">다시 그림</text><polyline class="l-smp" points="818,180 832,180 832,112 870,112 870,102" fill="none" marker-end="url(#b-smp)"/><text class="t-edge" x="782" y="150" text-anchor="middle">사용자 탭</text><rect class="b-smp" x="668" y="452" width="150" height="52" rx="6"/><text class="t-title" x="743.0" y="475.0" text-anchor="middle">결과 반환</text><text class="t-sub" x="743.0" y="491.0" text-anchor="middle">값 · 오류</text><rect class="b-hid" x="440" y="452" width="180" height="52" rx="6"/><text class="t-title" x="530.0" y="475.0" text-anchor="middle">응답 봉투</text><text class="t-sub" x="530.0" y="491.0" text-anchor="middle">result true · false</text><rect class="b-hid" x="214" y="452" width="180" height="52" rx="6"/><text class="t-title mono" x="304.0" y="475.0" text-anchor="middle">evaluateJavaScript</text><text class="t-sub" x="304.0" y="491.0" text-anchor="middle">JS 콜백 호출</text><rect class="b-web" x="16" y="452" width="150" height="52" rx="6"/><text class="t-title mono" x="91.0" y="475.0" text-anchor="middle">Promise resolve</text><text class="t-sub" x="91.0" y="491.0" text-anchor="middle">같은 callbackID</text><polyline class="l-smp" points="984,82.0 992,82.0 992,478.0 820,478.0" fill="none" marker-end="url(#b-smp)"/><text class="t-edge" x="986" y="420" text-anchor="end">결과</text><polyline class="l-key" points="668,478.0 622,478.0" fill="none" marker-end="url(#b-key)"/><polyline class="l-fw" points="440,478.0 396,478.0" fill="none" marker-end="url(#b-fw)"/><polyline class="l-web" points="214,478.0 168,478.0" fill="none" marker-end="url(#b-web)"/><text class="t-zone-sm" x="91" y="440" text-anchor="middle">응답</text></svg></div>
+      <figcaption>둘 다 프레임워크 안입니다. 라우터는 (브릿지, 커맨드) 단위로 판정해 화면 이동은 Navigator 실행부로, 나머지는 등록된 브릿지(기본 브릿지 또는 앱 고유 브릿지)로 보냅니다. 브릿지는 파라미터를 모델로 디코딩하고 Intent 를 부르는 입력 어댑터입니다. 디코딩이 곧 검증이라 규격에 맞지 않는 값은 Intent 에 닿지 못합니다. 그다음은 MVI 한 바퀴입니다. 사용자의 탭도 브릿지 호출과 같은 자리(Intent)로 들어옵니다.</figcaption>
+    </figure>
+    <ul class="rules">
+      <li class="k"><b>브릿지는 입력일 뿐</b><span>브릿지는 UseCase 를 직접 부르지 않습니다. 부수효과는 Intent 에만 있고, 상태는 순수 Reducer 만 바꿉니다.</span></li>
+      <li><b>UI 는 상태로 띄운다</b><span>확인 대화 상자도 Store 에 올리고 SwiftUI 가 그립니다. UIKit present 로 끼어들지 않습니다.</span></li>
+      <li><b>대기는 수명으로 끝낸다</b><span>타임아웃 대신 웹뷰 · 화면 · 대화 상자의 수명이 기다림을 끝냅니다. 답 없이 사라진 대화 상자는 오류로 응답합니다.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="col">
+      <h2><span class="sec-no">03</span>한 번의 왕복 — 확인 대화 상자</h2>
+      <p>웹이 <code>showConfirm</code>을 부르고 사용자가 "취소"를 누르기까지 코드가 지나는 순서입니다.</p>
+    </div>
+    <ol class="trip">
+      <li><span>웹 라이브러리가 <code>callbackID</code>를 붙여 <code>postMessage</code>로 보낸다</span><span class="who w">웹</span></li>
+      <li><span>WebView 컨트롤러가 메시지를 봉투로 바꾸고, 처리 중 목록(<code>inFlightTasks</code>)에 올린다</span><span class="who d">통로</span></li>
+      <li><span>라우터가 화면 이동 커맨드가 아니고 등록된 브릿지 커맨드임을 확인해 넘긴다</span><span class="who d">통로</span></li>
+      <li><span>브릿지가 파라미터를 <code>ShowConfirmParams</code>로 디코딩하고 Intent 를 부른다</span><span class="who s">브릿지 · MVI</span></li>
+      <li><span>Intent 가 <code>context.ask</code>로 대화 상자를 Store 에 올리고, Reducer 가 줄에 세운다</span><span class="who s">브릿지 · MVI</span></li>
+      <li><span>State 가 바뀌어 SwiftUI <code>.alert</code>가 뜨고, 사용자가 "취소"를 누른다</span><span class="who s">브릿지 · MVI</span></li>
+      <li><span>View 가 Intent 에 답을 넘기고, Intent 가 답한 뒤 대화 상자를 내린다</span><span class="who s">브릿지 · MVI</span></li>
+      <li><span>결과 <code>{value:false}</code>를 라우터가 응답 봉투로 감싼다</span><span class="who d">통로</span></li>
+      <li><span>JS 콜백이 같은 <code>callbackID</code>의 Promise 를 끝낸다</span><span class="who w">웹</span></li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="col">
+      <h2><span class="sec-no">04</span>설계에서 지킨 것</h2>
+    </div>
+    <div class="decisions">
+      <article>
+        <h3>규격이 코드보다 먼저</h3>
+        <p>iOS · Android · Web 이 같이 쓰는 브릿지 규격(JSON)을 서브모듈로 고정하고, 통로 이름 · 화면 이동 커맨드는 그 파일에서 코드로 생성합니다. 손으로 적은 값이 규격과 어긋날 자리를 없앴습니다.</p>
+        <span class="how">규격 → 코드 생성 → 적합성 테스트 → PR 커밋 상태</span>
+      </article>
+      <article>
+        <h3>적합성 검사를 머지 조건으로</h3>
+        <p>규격의 모든 커맨드에 정상 · 필드 누락 · 타입 오류 · 허용값 밖 케이스를 돌려, 실패를 "동작 차이"와 "아직 구현 안 함"으로 나눕니다. 동작 차이가 있으면 머지가 막힙니다.</p>
+        <span class="how">적합성 테스트 → PR 커밋 상태 → 머지 게이트</span>
+      </article>
+      <article>
+        <h3>반복 작업은 템플릿으로</h3>
+        <p>새 화면(State · Reducer · Intent · View · DI)과 새 브릿지 커맨드는 Tuist scaffold 로 만들고, 파일 배치 · 레이어 규칙은 검사 스크립트가 확인합니다.</p>
+        <span class="how">tuist scaffold → 규칙 검사 스크립트</span>
+      </article>
+      <article>
+        <h3>Swift Concurrency 하나로</h3>
+        <p>GCD 를 쓰지 않고 <code>async/await</code> · <code>@MainActor</code> · continuation 으로 통일했습니다. 실패는 옵셔널로 삼키지 않고 원인을 담은 오류로 던집니다.</p>
+        <span class="how">DispatchQueue 0 · Swift Testing</span>
+      </article>
+    </div>
+  </section>
+
+  <footer>개인 포트폴리오 · 2026</footer>
+</main>
+</body>
+</html>
