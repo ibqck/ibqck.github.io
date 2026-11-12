@@ -69,6 +69,8 @@ header { display: grid; gap: 16px; }
 .eyebrow { font-size: 13px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; margin: 0; }
 h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.2; margin: 0; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
 .lede { font-size: 18px; color: var(--fg); margin: 0; }
+.lede a { color: var(--fw); text-decoration: none; }
+.lede a:hover { text-decoration: underline; }
 .stack { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
 .stack li { font-family: var(--font-mono); font-size: 12.5px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--surface); }
 
@@ -185,6 +187,7 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
   <header class="col">
     <p class="eyebrow">Portfolio · iOS</p>
     <h1>Hybrid WebView Framework</h1>
+    <p class="lede">표인범 · iOS Architect (AA · PL) · <a href="mailto:inbeom0708@naver.com">inbeom0708@naver.com</a></p>
   </header>
 
   <section class="resume" aria-label="프로젝트 요약">
@@ -196,7 +199,7 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
       <div class="row">
         <dt>기간</dt>
         <dd class="num">2024.07 ~ 2026.07
-          <span class="phases"><span><em>PoC</em>2024.07 ~ 2024.12</span><span><em>본 개발</em>2025.01 ~ 2026.07</span></span>
+          <span class="phases"><span><em>PoC</em>2024.07 ~ 2025.01</span><span><em>본 개발</em>2025.01 ~ 2026.07</span></span>
         </dd>
       </div>
       <div class="row">
