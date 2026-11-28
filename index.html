@@ -218,7 +218,7 @@ footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line)
         <dt>주요 성과</dt>
         <dd>
           <ol class="wins">
-            <li><b>WebView 메모리 사용량 약 70% 감소</b><span>싱글톤 · 순환참조로 얽힌 Bridge 를 Navigator / API Bridge / SSO 세션 모듈로 분리해 순환참조와 Bridge Event 중첩 해소</span></li>
+            <li><b>WebView 메모리 누수 제거 · 사용량 대폭 감소</b><span>Instruments 로 웹뷰마다 JS 인터페이스가 반복 연결되고 해제되지 않는 누수를 확인. 호출마다 클래스를 새로 만들던 플러그인식 구조와 싱글톤 · 순환참조로 얽힌 Bridge 를 커맨드 기반 단방향 브릿지와 Navigator / API Bridge / SSO 세션 모듈로 재설계해 누수와 Bridge Event 중첩 해소</span></li>
             <li><b>Bridge 인터페이스 통합 · 규격 문서화</b><span>Bridge 마다 따로 있던 I/F 를 단일 I/F 와 규격 문서로 통합, WKScriptMessage → 브릿지 → Intent → UseCase 단방향 흐름으로 확장 기준 정립</span></li>
             <li><b>그룹사 공통 SDK 플랫폼화</b><span>RootView 진입점 하나와 계약 등록만으로 연동되게 설계, 그룹사마다 달랐던 WebView 구조를 공통 SDK 로 일원화</span></li>
             <li><b>Tuist 모듈화로 빌드 효율 개선</b><span>Domain(UseCase) / Data(Repository) / Presentation 분리와 내부 · 외부 의존성 정리로 증분 빌드 적용, 필요한 모듈만 로드</span></li>
